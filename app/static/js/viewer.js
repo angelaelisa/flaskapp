@@ -392,47 +392,35 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 
-    // Fill ports checkbox
-    document.getElementById("fill-selected-ports-form")?.addEventListener("submit", async (event) => {
-        event.preventDefault();
-
-        const kind = document.getElementById("kind-for-selection").value;
-        const status = document.getElementById("fill-selected-status");
-        const checkboxes = document.querySelectorAll('input[name="port"]:checked');
-
-        if (checkboxes.length === 0) {
-            status.textContent = "⚠️ Please select at least one port.";
-            status.style.color = "red";
-            return;
-        }
-
-        // Build mapping
-        const fill = {};
-        checkboxes.forEach(cb => {
-            fill[cb.value] = kind;
-        });
-
+    // Fill ports minimal
+    document.getElementById("fill-minimal-form").addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const index = parseInt(document.getElementById("minimal-index").value, 10);
+        const statusMsg = document.getElementById("fill-minimal-status");
+    
         try {
-            const res = await fetch("/fill_ports", {
+            const res = await fetch("/fill_minimal", {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ fill })
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ index }),
             });
-
+    
             const data = await res.json();
-            if (res.ok) {
-                status.textContent = data.message || "✅ Ports filled.";
-                status.style.color = "green";
-                refreshViewer(document.getElementById("viewer-container"));
-                loadSelectablePorts();  // reload the list
+            if (data.success) {
+                statusMsg.innerHTML = `✅ ${data.message} (${data.num_options} total options)`;
+                statusMsg.style.color = "green";
+                const container = document.getElementById("viewer-container");
+                refreshViewer(container);
             } else {
-                status.textContent = data.error || "❌ Failed.";
-                status.style.color = "red";
+                statusMsg.innerHTML = `❌ ${data.error}`;
+                statusMsg.style.color = "red";
             }
         } catch (err) {
-            console.error(err);
-            status.textContent = "❌ Unexpected error.";
+            statusMsg.innerHTML = `❌ Error: ${err.message}`;
+            statusMsg.style.color = "red";
         }
-    });
+    });    
 
 });
