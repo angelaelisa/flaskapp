@@ -160,3 +160,51 @@ def edit_routes(app):
 
         except Exception as e:
             return jsonify({"success": False, "error": str(e)}), 500
+
+    @app.route("/fill_minimal", methods=["POST"])
+    def fill_minimal():
+        try:
+            data = request.get_json()
+            index = int(data.get("index", 0))  # default to 0 if not provided
+
+            working_path = os.path.join(UPLOAD_FOLDER, "working.dae")
+            if not os.path.exists(working_path):
+                return (
+                    jsonify({"success": False, "error": "No working.dae found."}),
+                    400,
+                )
+
+            block_graph = BlockGraph.from_dae_file(working_path)
+            filled_graphs = block_graph.fill_ports_for_minimal_simulation()
+
+            if not filled_graphs:
+                return (
+                    jsonify({"success": False, "error": "No filled graphs returned."}),
+                    400,
+                )
+
+            if index >= len(filled_graphs):
+                return (
+                    jsonify(
+                        {"success": False, "error": f"Index {index} out of range."}
+                    ),
+                    400,
+                )
+
+            chosen_graph = filled_graphs[index].graph
+
+            # Save it back to working.dae
+            from tqec.interop.collada.read_write import write_block_graph_to_dae_file
+
+            write_block_graph_to_dae_file(chosen_graph, working_path)
+
+            return jsonify(
+                {
+                    "success": True,
+                    "message": f"Filled using minimal graph at index {index}.",
+                    "num_options": len(filled_graphs),
+                }
+            )
+
+        except Exception as e:
+            return jsonify({"success": False, "error": str(e)}), 500

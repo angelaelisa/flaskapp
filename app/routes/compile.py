@@ -53,14 +53,8 @@ def compile_routes(app):
     @app.route("/compile_circuit_from_working", methods=["POST"])
     def compile_circuit_from_working():
         try:
-            db_filename = (
-                request.form.get("detector_filename")
-                or request.form.get("existing_detector")
-                or None
-            )
-            db_filename = db_filename.strip() if db_filename else None
 
-            circuit = compile_from_working_dae(detector_db_name=db_filename)
+            circuit = compile_from_working_dae()
 
             folder = os.path.join(current_app.root_path, "stim_files")
             os.makedirs(folder, exist_ok=True)
@@ -79,6 +73,23 @@ def compile_routes(app):
 
         except Exception as e:
             return jsonify({"error": f"❌ {str(e)}"}), 400
+
+    @app.route("/get_stim_circuit", methods=["GET"])
+    def get_stim_circuit():
+        try:
+            folder = os.path.join(current_app.root_path, "stim_files")
+            filepath = os.path.join(folder, "stim_circuit.txt")
+
+            if not os.path.exists(filepath):
+                return jsonify({"error": "❌ stim_circuit.txt not found."}), 404
+
+            with open(filepath, "r") as f:
+                circuit = f.read()
+
+            return jsonify({"circuit": circuit})
+
+        except Exception as e:
+            return jsonify({"error": f"❌ {str(e)}"}), 500
 
     @app.route("/download_stim/<filename>")
     def download_stim(filename):

@@ -372,3 +372,48 @@ select:focus {
     gap: 10px;
     margin-bottom: 5px;
 }
+
+/* === Sub-tabs for Stim vs Detector DB === */
+.subtab-buttons {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.subtab-btn {
+    padding: 0.6rem 1.2rem;
+    font-weight: bold;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    background-color: #939393;    /* same as .tab-button inactive */
+    color: white;
+    transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.subtab-btn:hover {
+    background-color: #b19050;    /* same hover as .tab-button */
+    transform: scale(1.05);
+}
+
+.subtab-btn.active {
+    background-color: #4e6faf;    /* same as .tab-button.active */
+}
+
+.subtab-content {
+    display: none;
+    background-color: #f9f9f9;
+    padding: 1rem;
+    border-radius: 8px;
+    border: 1px solid #cccccc33;   /* light translucent border */
+    margin-top: 0.5rem;
+}
+
+.subtab-content.active {
+    display: block;
+}
+
+/* viewer sub-panels in compile tab */
+.viewer-subpanel {
+    display: none;
+  }

@@ -268,6 +268,7 @@ document.addEventListener("DOMContentLoaded", () => {
     refreshViewer(container);
     refreshDetectorList();
     loadSelectablePorts();
+    populateComposeDropdowns();
 
     // Generic accordion toggle
     const accordions = document.querySelectorAll(".accordion-button");
@@ -351,6 +352,15 @@ document.addEventListener("DOMContentLoaded", () => {
                 stimOutput.textContent = data.circuit;
                 downloadBtn.href = data.download_url;
                 downloadBtn.style.display = 'block';
+
+                // ✅ Immediately update Crumble iframe with the new circuit
+                const encodedCircuit = encodeURIComponent(data.circuit);
+                const crumbleIframe = document.getElementById("crumble-iframe");
+                if (crumbleIframe) {
+                    crumbleIframe.src = "https://algassert.com/crumble#circuit=" + encodedCircuit;
+                    document.getElementById("crumble-viewer-panel").style.display = "block";
+                }
+
             } else {
                 stimOutput.textContent = data.error || "❌ Failed to compile Stim circuit.";
                 downloadBtn.style.display = 'none';
@@ -392,47 +402,201 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 
-    // Fill ports checkbox
-    document.getElementById("fill-selected-ports-form")?.addEventListener("submit", async (event) => {
-        event.preventDefault();
-
-        const kind = document.getElementById("kind-for-selection").value;
-        const status = document.getElementById("fill-selected-status");
-        const checkboxes = document.querySelectorAll('input[name="port"]:checked');
-
-        if (checkboxes.length === 0) {
-            status.textContent = "⚠️ Please select at least one port.";
-            status.style.color = "red";
-            return;
-        }
-
-        // Build mapping
-        const fill = {};
-        checkboxes.forEach(cb => {
-            fill[cb.value] = kind;
-        });
+    // Fill ports minimal
+    document.getElementById("fill-minimal-form").addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const index = parseInt(document.getElementById("minimal-index").value, 10);
+        const statusMsg = document.getElementById("fill-minimal-status");
 
         try {
-            const res = await fetch("/fill_ports", {
+            const res = await fetch("/fill_minimal", {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ fill })
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ index }),
             });
 
             const data = await res.json();
-            if (res.ok) {
-                status.textContent = data.message || "✅ Ports filled.";
-                status.style.color = "green";
-                refreshViewer(document.getElementById("viewer-container"));
-                loadSelectablePorts();  // reload the list
+            if (data.success) {
+                statusMsg.innerHTML = `✅ ${data.message} (${data.num_options} total options)`;
+                statusMsg.style.color = "green";
+                const container = document.getElementById("viewer-container");
+                refreshViewer(container);
             } else {
-                status.textContent = data.error || "❌ Failed.";
-                status.style.color = "red";
+                statusMsg.innerHTML = `❌ ${data.error}`;
+                statusMsg.style.color = "red";
             }
         } catch (err) {
-            console.error(err);
-            status.textContent = "❌ Unexpected error.";
+            statusMsg.innerHTML = `❌ Error: ${err.message}`;
+            statusMsg.style.color = "red";
         }
     });
 
+    // --- subtabs for Stim vs Detector DB ---
+    document.querySelectorAll('.subtab-btn').forEach(btn => {
+        // 1) Compile-subtab logic:
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.subtab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.subtab-content').forEach(c => {
+                c.style.display = 'none';
+                c.classList.remove('active');
+            });
+            btn.classList.add('active');
+            const panel = document.getElementById(btn.dataset.target);
+            panel.style.display = 'block';
+            panel.classList.add('active');
+
+            // 2) Toggle the two viewer sub-panels
+            const popPanel     = document.getElementById('pop-viewer-panel');
+            const crumblePanel = document.getElementById('crumble-viewer-panel');
+
+            if (btn.dataset.target === 'surfaces-tab') {
+                // show Pop-Faces, hide Crumble
+                popPanel.style.display     = 'block';
+                crumblePanel.style.display = 'none';
+            } else if (btn.dataset.target === 'stim-tab') {
+                // hide Pop-Faces, show Crumble (and set its URL)
+                popPanel.style.display = 'none';
+
+                fetch("/get_stim_circuit")
+                .then(res => res.json())
+                .then(data => {
+                    if (data.error) {
+                        alert("❌ Error loading Stim circuit: " + data.error);
+                        return;
+                    }
+
+                    const encodedCircuit = encodeURIComponent(data.circuit);
+                    document.getElementById("crumble-iframe").src =
+                    "https://algassert.com/crumble#circuit=" + encodedCircuit;
+
+                    crumblePanel.style.display = "block";
+                })
+                .catch(err => {
+                    alert("❌ Failed to load Stim circuit.");
+                    console.error(err);
+                });
+            } else {
+                // detector-tab or any other: hide both
+                popPanel.style.display     = 'none';
+                crumblePanel.style.display = 'none';
+            }
+        });
+    });
+});
+
+// Handle second BlockGraph upload
+document.getElementById("compose-upload")?.addEventListener("change", async (e) => {
+    const file = e.target.files[0];
+    if (!file || !file.name.endsWith(".dae")) {
+        alert("Please upload a valid .dae file.");
+        return;
+    }
+
+    const formData = new FormData();
+    formData.append("compose_dae", file);
+
+    try {
+        const res = await fetch("/upload_second_blockgraph", {
+            method: "POST",
+            body: formData
+        });
+        const data = await res.json();
+
+        const status = document.getElementById("compose-status");
+        if (res.ok) {
+            status.textContent = "✅ Second BlockGraph uploaded and relabeled.";
+            status.style.color = "green";
+            populateComposeDropdowns();  // Load port lists
+        } else {
+            status.textContent = data.error || "❌ Failed to upload.";
+            status.style.color = "red";
+        }
+    } catch (err) {
+        alert("Upload error: " + err.message);
+    }
+});
+
+// Populate port dropdowns with label + position
+async function populateComposeDropdowns() {
+    const mainSelect = document.getElementById("main-port");
+    const secondSelect = document.getElementById("second-port");
+
+    const [mainRes, secondRes] = await Promise.all([
+        fetch("/get_blockgraph_ports"),
+        fetch("/get_second_blockgraph_ports")
+    ]);
+
+    const mainData = await mainRes.json();
+    const secondData = await secondRes.json();
+
+    const formatOption = port =>
+        `<option value="${port.label}">${port.label} (${port.position})</option>`;
+
+    mainSelect.innerHTML = '<option value="">-- Select main port --</option>' +
+        mainData.ports.map(formatOption).join("");
+
+    secondSelect.innerHTML = '<option value="">-- Select second port --</option>' +
+        secondData.ports.map(formatOption).join("");
+}
+
+// Compose form submission
+document.getElementById("compose-form")?.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const form = e.target;
+    const mainPort = form.main_port.value;
+    const secondPort = form.second_port.value;
+    const status = document.getElementById("compose-status");
+
+    try {
+        const res = await fetch("/compose_blockgraphs", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ main_port: mainPort, second_port: secondPort })
+        });
+
+        const data = await res.json();
+
+        if (res.ok) {
+            status.textContent = data.message || "✅ Successfully composed BlockGraphs.";
+            status.style.color = "green";
+
+            // Reload viewer and dropdowns
+            refreshViewer(document.getElementById("viewer-container"));
+            populateBaseCubeOptions();
+            populateRemovableCubes();
+        } else {
+            status.textContent = data.error || "❌ Composition failed.";
+            status.style.color = "red";
+        }
+    } catch (err) {
+        status.textContent = "❌ Error: " + err.message;
+        status.style.color = "red";
+    }
+});
+
+// Export to JSON
+document.getElementById("export-json-btn")?.addEventListener("click", async () => {
+    try {
+        const res = await fetch("/export_blockgraph_json");
+        if (!res.ok) {
+            const data = await res.json();
+            document.getElementById("export-json-status").textContent = data.error || "❌ Failed to export.";
+            return;
+        }
+
+        // Download the file
+        const blob = await res.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "working_blockgraph.json";
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        document.getElementById("export-json-status").textContent = "✅ JSON downloaded successfully.";
+    } catch (err) {
+        document.getElementById("export-json-status").textContent = "❌ Error: " + err.message;
+    }
 });

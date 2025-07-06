@@ -9,4 +9,3 @@ instance/
 uploads/
 detector_databases/
 *.pkl
-

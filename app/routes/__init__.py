@@ -3,6 +3,7 @@ from .view import view_routes
 from .blockgraph import blockgraph_routes
 from .compile import compile_routes, render_pop_faces_viewer
 from .edit import edit_routes
+from .compose import compose_routes  # Import the blueprint
 
 
 def register_routes(app):
@@ -12,3 +13,4 @@ def register_routes(app):
     compile_routes(app)
     edit_routes(app)
     render_pop_faces_viewer(app)
+    compose_routes(app)

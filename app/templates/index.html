@@ -11,278 +11,356 @@
 </head>
 <body>
 
-<div class="header-bar">
-    <div class="tab-buttons">
-        <button class="tab-button" data-tab="tab-origin">Import</button>
-        <button class="tab-button" data-tab="tab-actions">Actions</button>
-        <button class="tab-button" data-tab="tab-compile">Compile</button>
+    <div class="header-bar">
+        <div class="tab-buttons">
+            <button class="tab-button" data-tab="tab-origin">Import</button>
+            <button class="tab-button" data-tab="tab-actions">Actions</button>
+            <button class="tab-button" data-tab="tab-compile">Compile</button>
+            <button class="tab-button" data-tab="tab-plot">Plot</button>
+        </div>
+        <h1 class="app-title">tqec Viewer</h1>
     </div>
-    <h1 class="app-title">tqec Viewer</h1>
-</div>
 
-<div class="tab-content" id="tab-origin">
-    <div class="content-grid">
-        <div class="accordion-panel">
-            <h2>📁 Import BlockGraph (.dae)</h2>
-            <div class="upload-section">
-                <div id="drop-area" class="drop-area">
-                    <p>Drag & drop your <code>.dae</code> file here, or</p>
-                    <br><br><br>
-                    <button id="fileSelect" class="button">Browse File</button>
-                    <input type="file" id="fileElem" name="dae_file" accept=".dae" style="display:none" required>
+    <div class="tab-content" id="tab-origin">
+        <div class="content-grid">
+            <div class="accordion-panel">
+                <h2>📁 Import BlockGraph (.dae)</h2>
+                <div class="upload-section">
+                    <div id="drop-area" class="drop-area">
+                        <p>Drag & drop your <code>.dae</code> file here, or</p>
+                        <br><br><br>
+                        <button id="fileSelect" class="button">Browse File</button>
+                        <input type="file" id="fileElem" name="dae_file" accept=".dae" style="display:none" required>
+                    </div>
+                    <form method="post" enctype="multipart/form-data" id="upload-form" style="display:none;">
+                        <input type="file" name="dae_file" id="hidden-upload-input" accept=".dae" required>
+                        <button type="submit" class="button">Upload</button>
+                    </form>
                 </div>
-                <form method="post" enctype="multipart/form-data" id="upload-form" style="display:none;">
-                    <input type="file" name="dae_file" id="hidden-upload-input" accept=".dae" required>
-                    <button type="submit" class="button">Upload</button>
-                </form>
+            </div>
+            <div class="viewer-panel">
+                <div id="viewer-container-data" style="margin-top: 1em; width: 100%; min-height: 500px;">
+                    <p><em>No viewer rendered yet.</em></p>
+                </div>
+                <button id="load-viewer-data" class="button" style="display: block">View BlockGraph</button>
             </div>
         </div>
-        <div class="viewer-panel">
-            <div id="viewer-container-data" style="margin-top: 1em; width: 100%; min-height: 500px;">
-                <p><em>No viewer rendered yet.</em></p>
-            </div>
-            <button id="load-viewer-data" class="button" style="display: block">View BlockGraph</button>
-        </div>
     </div>
-</div>
 
-<div class="tab-content active" id="tab-actions">
-    <div class="content-grid">
-        <div class="accordion-panel">
-            <h2>Actions</h2>
+    <div class="tab-content active" id="tab-actions">
+        <div class="content-grid">
+            <div class="accordion-panel">
+                <h2>Actions</h2>
 
-            <div class="accordion">
-                <button class="accordion-button" id="start-from-scratch">Create New BlockGraph</button>
-                <div class="accordion-content">
-                    <form id="start-graph-form" method="post" action="/create">
-                        <label for="initial-kind">Initial Cube Kind:</label>
-                        <select id="initial-kind" name="kind" required>
-                            <option value="">-- Please select --</option>
-                            <option value="ZXX">ZXX</option>
-                            <option value="ZXZ">ZXZ</option>
-                        </select>
+                <div class="accordion">
+                    <button class="accordion-button" id="start-from-scratch">Create New BlockGraph</button>
+                    <div class="accordion-content">
+                        <form id="start-graph-form" method="post" action="/create">
+                            <label for="initial-kind">Initial Cube Kind:</label>
+                            <select id="initial-kind" name="kind" required>
+                                <option value="">-- Please select --</option>
+                                <option value="ZXX">ZXX</option>
+                                <option value="ZXZ">ZXZ</option>
+                            </select>
 
-                        <label for="initial-position">Initial Position (x,y,z):</label>
-                        <input type="text" id="initial-position" name="position" placeholder="e.g., 0,0,0" required>
+                            <label for="initial-position">Initial Position (x,y,z):</label>
+                            <input type="text" id="initial-position" name="position" placeholder="e.g., 0,0,0" required>
 
-                        <label for="initial-label">Label (optional):</label>
-                        <input type="text" id="initial-label" name="label" placeholder="e.g., Start">
-                        <br><br>
-                        <button type="submit" class="button">Create BlockGraph</button>
-                    </form>
-                    <p id="create-status" class="status-msg"></p>
+                            <label for="initial-label">Label (optional):</label>
+                            <input type="text" id="initial-label" name="label" placeholder="e.g., Start">
+                            <br><br>
+                            <button type="submit" class="button">Create BlockGraph</button>
+                        </form>
+                        <p id="create-status" class="status-msg"></p>
+                    </div>
                 </div>
-            </div>
 
-            <div class="accordion">
-                <button class="accordion-button" id="add-cubesandpipes">Add Cube by Direction</button>
-                <div class="accordion-content">
-                    <form id="add-cube-form">
-                        <label for="base-cube">From Cube:</label>
-                        <select id="base-cube" name="base_cube" required>
-                            <option value="">-- Select a base cube --</option>
-                        </select>
+                <div class="accordion">
+                    <button class="accordion-button" id="add-cubesandpipes">Add Cube by Direction</button>
+                    <div class="accordion-content">
+                        <form id="add-cube-form">
+                            <label for="base-cube">From Cube:</label>
+                            <select id="base-cube" name="base_cube" required>
+                                <option value="">-- Select a base cube --</option>
+                            </select>
 
-                        <label for="direction">Direction:</label>
-                        <select id="direction" name="direction" required>
-                            <option value="">-- Select direction --</option>
-                            <option value="X+">+X</option>
-                            <option value="X-">-X</option>
-                            <option value="Y+">+Y</option>
-                            <option value="Y-">-Y</option>
-                            <option value="Z+">+Z</option>
-                            <option value="Z-">-Z</option>
-                        </select>
+                            <label for="direction">Direction:</label>
+                            <select id="direction" name="direction" required>
+                                <option value="">-- Select direction --</option>
+                                <option value="X+">+X</option>
+                                <option value="X-">-X</option>
+                                <option value="Y+">+Y</option>
+                                <option value="Y-">-Y</option>
+                                <option value="Z+">+Z</option>
+                                <option value="Z-">-Z</option>
+                            </select>
 
-                        <label for="kind">Kind:</label>
-                        <select id="kind" name="kind" required>
-                            <option value="">-- Select kind --</option>
-                            <option value="ZXX">ZXX</option>
-                            <option value="ZXZ">ZXZ</option>
-                            <option value="PORT">PORT</option>
-                        </select>
+                            <label for="kind">Kind:</label>
+                            <select id="kind" name="kind" required>
+                                <option value="">-- Select kind --</option>
+                                <option value="ZXX">ZXX</option>
+                                <option value="ZXZ">ZXZ</option>
+                                <option value="PORT">PORT</option>
+                            </select>
 
-                        <div id="label-container">
-                            <label for="label">Label:</label>
-                            <input type="text" id="label" name="label" placeholder="(Optional)">
-                        </div>
-                        <br><br>
-                        <button type="submit" class="button">Add Cube</button>
-                    </form>
-                    <p id="add-cube-status"></p>
-                </div>
-            </div>
-
-            <div class="accordion">
-                <button class="accordion-button" id="remove-cubesandpipes">Remove Cube</button>
-                <div class="accordion-content">
-                    <form id="remove-cube-form">
-                        <label for="remove-cube">Select Cube to Remove:</label>
-                        <select id="remove-cube" name="remove_cube" required>
-                            <option value="">-- Select cube --</option>
-                        </select>
-                        <br><br>
-                        <button type="submit" class="button">Remove Cube</button>
-                    </form>
-                    <p id="remove-cube-status"></p>
-                </div>
-            </div>
-
-            <div class="accordion">
-                <button class="accordion-button" id="rotate-accordion">Rotate</button>
-                <div class="accordion-content">
-                    <form id="rotate-form">
-                        <label for="rotate_axis">Rotate Axis:</label>
-                        <select name="rotate_axis" id="rotate_axis" required>
-                            <option value="">-- Select axis --</option>
-                            <option value="X">X</option>
-                            <option value="Y">Y</option>
-                            <option value="Z">Z</option>
-                        </select>
-                        <br><br>
-                        <button type="submit" class="button">Rotate</button>
-                    </form>
-                </div>
-            </div>
-
-            <!-- Fill Ports Manually -->
-            <!-- Selective Port Filling -->
-            <div class="accordion">
-                <button class="accordion-button" id="fill-selected-ports">Fill Selected Ports</button>
-                <div class="accordion-content">
-                    <form id="fill-selected-ports-form">
-                        <div id="select-port-list">
-                            <p><em>Loading ports...</em></p>
-                        </div>
-
-                        <label for="kind-for-selection">Cube kind for selected ports:</label>
-                        <select id="kind-for-selection" name="kind" required>
-                            <option value="ZXX">ZXX</option>
-                            <option value="ZXZ">ZXZ</option>
-                            <option value="Y">Y</option>
-                        </select>
-                        <br><br>
-
-                        <button type="submit" class="button">Fill Selected</button>
-                    </form>
-                    <p id="fill-selected-status" class="status-msg"></p>
-                </div>
-            </div>
-
-            <div class="accordion">
-                <button class="accordion-button" id="blockgraph-data">Blockgraph Data</button>
-                <div class="accordion-content">
-                    <div class="accordion">
-                        <button class="accordion-button" id="load-cubes">Cubes</button>
-                        <div class="accordion-content" id="cube-list">
-                            <div id="cube-output">
-                                <p><em>Cubes will appear here.</em></p>
+                            <div id="label-container">
+                                <label for="label">Label:</label>
+                                <input type="text" id="label" name="label" placeholder="(Optional)">
                             </div>
-                            <div id="cube-controls" style="margin-bottom: 10px;">
-                                <button id="refresh-cubes" class="button">Refresh Cubes</button>
+                            <br><br>
+                            <button type="submit" class="button">Add Cube</button>
+                        </form>
+                        <p id="add-cube-status"></p>
+                    </div>
+                </div>
+
+                <div class="accordion">
+                    <button class="accordion-button" id="remove-cubesandpipes">Remove Cube</button>
+                    <div class="accordion-content">
+                        <form id="remove-cube-form">
+                            <label for="remove-cube">Select Cube to Remove:</label>
+                            <select id="remove-cube" name="remove_cube" required>
+                                <option value="">-- Select cube --</option>
+                            </select>
+                            <br><br>
+                            <button type="submit" class="button">Remove Cube</button>
+                        </form>
+                        <p id="remove-cube-status"></p>
+                    </div>
+                </div>
+
+                <div class="accordion">
+                    <button class="accordion-button" id="rotate-accordion">Rotate</button>
+                    <div class="accordion-content">
+                        <form id="rotate-form">
+                            <label for="rotate_axis">Rotate Axis:</label>
+                            <select name="rotate_axis" id="rotate_axis" required>
+                                <option value="">-- Select axis --</option>
+                                <option value="X">X</option>
+                                <option value="Y">Y</option>
+                                <option value="Z">Z</option>
+                            </select>
+                            <br><br>
+                            <button type="submit" class="button">Rotate</button>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="accordion">
+                    <button class="accordion-button" id="compose-blockgraphs-toggle">
+                        Compose BlockGraphs
+                    </button>
+                    <div class="accordion-content">
+                        <form id="compose-form" enctype="multipart/form-data">
+                            <label for="compose-upload">Upload Second BlockGraph (.dae):</label>
+                            <input type="file" id="compose-upload" name="compose_dae" accept=".dae" required>
+                            <br><br>
+
+                            <label for="main-port">Select Main BlockGraph Port:</label>
+                            <select id="main-port" name="main_port" required>
+                                <option value="">-- Select main port --</option>
+                            </select>
+
+                            <label for="second-port">Select Second BlockGraph Port:</label>
+                            <select id="second-port" name="second_port" required>
+                                <option value="">-- Select second port --</option>
+                            </select>
+                            <br><br>
+
+                            <button type="submit" class="button">Compose BlockGraphs</button>
+                        </form>
+                        <p id="compose-status" class="status-msg"></p>
+                    </div>
+                </div>
+
+                <!-- Fill Ports Minimally -->
+                <div class="accordion">
+                    <button class="accordion-button" id="fill-minimal-toggle">
+                        Fill Ports Minimally
+                    </button>
+                    <div class="accordion-content">
+                        <form id="fill-minimal-form">
+                            <label for="minimal-index">Select minimal fill option (index):</label>
+                            <input type="number" id="minimal-index" name="index" min="0" value="0" required />
+                            <br><br>
+                            <button type="submit" class="button">Apply Minimal Fill</button>
+                        </form>
+                        <p id="fill-minimal-status" class="status-msg"></p>
+                    </div>
+                </div>
+
+                <div class="accordion">
+                    <button class="accordion-button" id="blockgraph-data">Blockgraph Data</button>
+                    <div class="accordion-content">
+                        <div class="accordion">
+                            <button class="accordion-button" id="load-cubes">Cubes</button>
+                            <div class="accordion-content" id="cube-list">
+                                <div id="cube-output">
+                                    <p><em>Cubes will appear here.</em></p>
+                                </div>
+                                <div id="cube-controls" style="margin-bottom: 10px;">
+                                    <button id="refresh-cubes" class="button">Refresh Cubes</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="accordion">
+                            <button class="accordion-button" id="load-pipes">Pipes</button>
+                            <div class="accordion-content" id="pipe-list">
+                                <div id="pipe-output">
+                                    <p><em>Pipes will appear here.</em></p>
+                                </div>
+                                <div id="pipe-controls" style="margin-bottom: 10px;">
+                                    <button id="refresh-pipes" class="button">Refresh Pipes</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="accordion">
+                            <button class="accordion-button">Export BlockGraph to JSON</button>
+                            <div class="accordion-content">
+                                <button id="export-json-btn" class="button">⬇️ Download JSON</button>
+                                <p id="export-json-status" class="status-msg"></p>
                             </div>
                         </div>
                     </div>
-                    <div class="accordion">
-                        <button class="accordion-button" id="load-pipes">Pipes</button>
-                        <div class="accordion-content" id="pipe-list">
-                            <div id="pipe-output">
-                                <p><em>Pipes will appear here.</em></p>
-                            </div>
-                            <div id="pipe-controls" style="margin-bottom: 10px;">
-                                <button id="refresh-pipes" class="button">Refresh Pipes</button>
-                            </div>
-                        </div>
-                    </div>
                 </div>
             </div>
-        </div>
-        <div class="viewer-panel">
-            <div id="viewer-container" style="margin-top: 1em; width: 100%; min-height: 500px;">
-                <p><em>No viewer rendered yet.</em></p>
+            <div class="viewer-panel">
+                <div id="viewer-container" style="margin-top: 1em; width: 100%; min-height: 500px;">
+                    <p><em>No viewer rendered yet.</em></p>
+                </div>
+                <button id="load-viewer" class="button" style="display: none">View BlockGraph</button>
             </div>
-            <button id="load-viewer" class="button" style="display: none">View BlockGraph</button>
         </div>
     </div>
-</div>
 
-<div class="tab-content" id="tab-compile">
-    <div class="content-grid">
-        <div class="accordion-panel">
-            <h3>🛠️ Compile Circuit</h3>
+    <div class="tab-content" id="tab-compile">
+        <div class="content-grid">
+            <div class="accordion-panel">
+                <h3>🛠️ Compile Circuit</h3>
 
-            <div style="margin-bottom: 1rem;">
-                <button id="find-surfaces" class="button">Find Correlation Surfaces</button>
-            </div>
-
-            <div id="surface-output-container" class="scroll-cage">
-                <div id="surface-output">
-                    <p><em>Click the button above to view correlation surfaces.</em></p>
+                <!-- Sub-tab buttons -->
+                <div class="subtab-buttons">
+                  <button class="subtab-btn active" data-target="surfaces-tab">🔍 Surfaces</button>
+                  <button class="subtab-btn"         data-target="stim-tab">🚨 Stim Circuit</button>
+                  <button class="subtab-btn"         data-target="detector-tab">🗄️ Detector DB</button>
                 </div>
-            </div>
 
-            <div style="margin-bottom: 1rem;">
-                <label for="surface-index"><strong>Select Correlation Surface:</strong></label>
-                <select id="surface-index" name="surface_index">
-                    <option value="">-- Select surface --</option>
-                </select>
-            </div>
+                <!-- Surfaces panel -->
+                <div id="surfaces-tab" class="subtab-content active">
+                  <div style="margin-bottom: 1rem;">
+                    <button id="find-surfaces" class="button">Find Correlation Surfaces</button>
+                  </div>
+                  <div id="surface-output-container" class="scroll-cage">
+                    <div id="surface-output">
+                      <p><em>Click the button above to view correlation surfaces.</em></p>
+                    </div>
+                  </div>
+                  <div style="margin-bottom: 1rem;">
+                    <label for="surface-index"><strong>Select Correlation Surface:</strong></label>
+                    <select id="surface-index" name="surface_index">
+                      <option value="">-- Select surface --</option>
+                    </select>
+                  </div>
+                </div>
 
-            <hr>
-            <h3>🚨 Stim Circuit</h3>
-            <form id="stim-form" method="post">
-                <label for="detector_filename">Detector DB filename (optional):</label>
-                <input type="text" id="detector_filename" name="detector_filename" placeholder="e.g., my_detectors.pkl">
+                <!-- Stim Circuit panel -->
+                <div id="stim-tab" class="subtab-content">
+                  <form id="stim-form" method="post">
+                    <button id="generate-stim-btn" class="button" name="action" value="compile">
+                      Generate Stim Circuit
+                    </button>
+                  </form>
+                  <div id="stim-section" style="margin-top: 1rem;">
+                    <h3>Stim Circuit</h3>
+                    <div id="stim-output-container" class="scroll-cage">
+                      <pre id="stim-output"></pre>
+                    </div>
+                    <a id="download-stim-btn" class="button" href="#" download style="display: none; margin-top: 1rem;">
+                      ⬇️ Download Stim Circuit
+                    </a>
+                  </div>
+                </div>
 
-                <label for="existing-detector">Or choose from existing:</label>
-                <select name="existing_detector" id="existing-detector">
+                <!-- Detector-DB panel -->
+                <div id="detector-tab" class="subtab-content">
+                  <label for="existing-detector">Choose a DB from existing:</label>
+                  <select name="existing_detector" id="existing-detector">
                     <option value="">-- None --</option>
                     {% for file in available_db_files %}
-                        <option value="{{ file }}">{{ file }}</option>
+                      <option value="{{ file }}">{{ file }}</option>
                     {% endfor %}
-                </select>
-                <br><br>
-                <button id="generate-stim-btn" class="button" name="action" value="compile">
-                    Generate Stim Circuit
-                </button>
-            </form>
-
-            <div id="stim-section" style="display: none; margin-top: 1rem;">
-                <h3>Stim Circuit</h3>
-                <div id="stim-output-container" style="max-height: 300px; overflow-y: auto; border: 1px solid #ccc; padding: 10px;">
-                    <pre id="stim-output" style="white-space: pre-wrap;"></pre>
+                  </select>
                 </div>
-                <a id="download-stim-btn" class="btn" href="#" download style="display: none; margin-top: 1rem;">
-                    ⬇️ Download Stim Circuit
-                </a>
-            </div>
-        </div>
 
-        <div class="viewer-panel">
-            <h3>📐 Pop Faces Viewer</h3>
-            <label for="pop-direction">Direction:</label>
-            <select id="pop-direction">
-                <option value="">-- Select direction --</option>
-                <option value="+X">+X</option>
-                <option value="-X">-X</option>
-                <option value="+Y">+Y</option>
-                <option value="-Y">-Y</option>
-                <option value="+Z">+Z</option>
-                <option value="-Z">-Z</option>
-            </select>
-            <button id="show-pop-viewer" class="button">Show Pop View</button>
-            <div id="pop-viewer-container" style="margin-top: 1em;"></div>
+            </div>
+
+            <div class="viewer-panel">
+                <!-- Pop-Faces sub-panel -->
+                <div id="pop-viewer-panel" class="viewer-subpanel" style="display: block;">
+                  <h3>📐 Pop Faces Viewer</h3>
+                  <label for="pop-direction">Direction:</label>
+                  <select id="pop-direction">
+                    <option value="">-- Select direction --</option>
+                    <option value="+X">+X</option>
+                    <option value="-X">-X</option>
+                    <option value="+Y">+Y</option>
+                    <option value="-Y">-Y</option>
+                    <option value="+Z">+Z</option>
+                    <option value="-Z">-Z</option>
+                  </select>
+                  <button id="show-pop-viewer" class="button">Show Pop View</button>
+                  <div id="pop-viewer-container" style="margin-top: 1em;"></div>
+                </div>
+
+                <!-- Crumble-Circuit sub-panel (hidden by default) -->
+                <div id="crumble-viewer-panel" class="viewer-subpanel" style="display: none;">
+                  <h3>Crumble Circuit</h3>
+                  <iframe
+                    id="crumble-iframe"
+                    src=""
+                    width="100%"
+                    height="350"
+                    style="border: none;"
+                  ></iframe>
+                </div>
+              </div>
+
         </div>
     </div>
-</div>
 
-<br>
-<form method="post">
-    <button type="submit" class="button" name="action" value="clear">🗑️ Clear All</button>
-</form>
+    <div class="tab-content" id="tab-plot">
+        <div class="content-grid">
+            <div class="accordion-panel">
+                <h2>📊 Run Simulation & Plot Results</h2>
+                <form id="simulation-form" method="post">
+                    <label for="style">Select Style:</label>
+                    <select id="style" name="style" class="form-select">
+                        <option value="STANDARD" selected>STANDARD</option>
+                    </select>
+                    <br><br>
+                    <button type="submit" class="button">Run Simulation</button>
+                </form>
+                <p id="simulation-status" class="status-msg"></p>
+            </div>
 
-<!-- Flask templated scripts -->
-<script src="{{ url_for('static', filename='js/viewer.js') }}"></script>
-<script src="{{ url_for('static', filename='js/import_tab.js') }}"></script>
+            <div class="viewer-panel">
+                <h3>📁 Simulation Plots</h3>
+                <div id="plot-gallery" style="margin-top: 1em; display: flex; flex-wrap: wrap; gap: 10px;">
+                    <p><em>Generated plots will appear here.</em></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <br>
+    <form method="post">
+        <button type="submit" class="button" name="action" value="clear">🗑️ Clear All</button>
+    </form>
+
+    <!-- Flask templated scripts -->
+    <script src="{{ url_for('static', filename='js/viewer.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/import_tab.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/plot.js') }}"></script>
+
 </body>
 </html>
