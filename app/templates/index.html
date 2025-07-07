@@ -265,31 +265,104 @@
 
                 <!-- Stim Circuit panel -->
                 <div id="stim-tab" class="subtab-content">
-                  <form id="stim-form" method="post">
-                    <button id="generate-stim-btn" class="button" name="action" value="compile">
-                      Generate Stim Circuit
-                    </button>
-                  </form>
-                  <div id="stim-section" style="margin-top: 1rem;">
-                    <h3>Stim Circuit</h3>
-                    <div id="stim-output-container" class="scroll-cage">
-                      <pre id="stim-output"></pre>
+                    <form id="stim-form" method="post">
+                    <!-- Convention select -->
+                    <div style="margin-bottom: 1rem;">
+                        <label for="compile_convention"><strong>Circuit Convention:</strong></label>
+                        <select id="compile_convention" name="compile_convention">
+                        <option value="FIXED_BULK_CONVENTION" selected>FIXED_BULK_CONVENTION</option>
+                        <option value="FIXED_PARITY_CONVENTION">FIXED_PARITY_CONVENTION</option>
+                        </select>
                     </div>
-                    <a id="download-stim-btn" class="button" href="#" download style="display: none; margin-top: 1rem;">
-                      ⬇️ Download Stim Circuit
-                    </a>
-                  </div>
+
+                    <!-- Distance (k) -->
+                    <div style="margin-bottom: 1rem;">
+                        <label for="k"><strong>Scale factor (k):</strong></label>
+                        <select id="k" name="k">
+                            <option value="1">1</option>
+                            <option value="2" selected>2</option>
+                            <option value="3">3</option>
+                            <option value="4">4</option>
+                            <option value="5">5</option>
+                            <option value="6">6</option>
+                        </select>
+                    </div>
+
+                    <!-- Noise parameter p -->
+                    <div style="margin-bottom: 1rem;">
+                        <label for="noise_p"><strong>Noise Strength (p):</strong></label>
+                        <input
+                        type="number"
+                        id="noise_p"
+                        name="noise_p"
+                        value="0.001"
+                        min="0.000"
+                        max="1"
+                        step="0.0001"
+                        style="width: 100px;"
+                        />
+                    </div>
+                    <!-- Manhattan radius -->
+                    <div style="margin-bottom: 1rem;">
+                    <label for="manhattan_radius"><strong>Manhattan Radius:</strong></label>
+                    <input
+                        type="number"
+                        id="manhattan_radius"
+                        name="manhattan_radius"
+                        value="2"
+                        min="-1"
+                        step="1"
+                        style="width: 80px;"
+                    />
+                    </div>
+
+                    <button id="generate-stim-btn" class="button" name="action" value="compile">
+                        Generate Stim Circuit
+                    </button>
+                    </form>
+                    <div id="stim-section" style="margin-top: 1rem;">
+                        <h3>Stim Circuit</h3>
+                        <div id="stim-output-container" class="scroll-cage">
+                        <pre id="stim-output"></pre>
+                        </div>
+                        <a id="download-stim-btn" class="button" href="#" download style="display: none; margin-top: 1rem;">
+                        ⬇️ Download Stim Circuit
+                        </a>
+                    </div>
                 </div>
 
                 <!-- Detector-DB panel -->
                 <div id="detector-tab" class="subtab-content">
-                  <label for="existing-detector">Choose a DB from existing:</label>
-                  <select name="existing_detector" id="existing-detector">
-                    <option value="">-- None --</option>
-                    {% for file in available_db_files %}
-                      <option value="{{ file }}">{{ file }}</option>
-                    {% endfor %}
-                  </select>
+                    <label for="existing-detector">Choose a DB from existing:</label>
+                    <select name="existing_detector" id="existing-detector">
+                        <option value="">-- None --</option>
+                        {% for file in available_db_files %}
+                        <option value="{{ file }}">{{ file }}</option>
+                        {% endfor %}
+                    </select>
+                    <!-- Detector DB path -->
+                    <div style="margin-bottom: 1rem;">
+                    <label for="database_path"><strong>Detector DB Path (optional):</strong></label>
+                    <input
+                        type="text"
+                        id="database_path"
+                        name="database_path"
+                        placeholder="e.g., my_detectors.pkl"
+                        style="width: 250px;"
+                    />
+                    </div>
+
+                    <!-- Database options -->
+                    <div style="margin-bottom: 1rem;">
+                    <label>
+                        <input type="checkbox" id="do_not_use_database" name="do_not_use_database" />
+                        <strong>Do not use database</strong>
+                    </label><br>
+                    <label>
+                        <input type="checkbox" id="only_use_database" name="only_use_database" />
+                        <strong>Only use database</strong>
+                    </label>
+                    </div>
                 </div>
 
             </div>

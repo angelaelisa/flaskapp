@@ -327,50 +327,6 @@ document.addEventListener("DOMContentLoaded", () => {
     // Find correlation surfaces
     document.getElementById("find-surfaces")?.addEventListener("click", loadCorrelationSurfaces);
 
-    // Stim circuit generation
-    document.getElementById('generate-stim-btn')?.addEventListener('click', async (event) => {
-        event.preventDefault();
-
-        const stimOutput = document.getElementById('stim-output');
-        const stimSection = document.getElementById('stim-section');
-        const downloadBtn = document.getElementById('download-stim-btn');
-
-        stimOutput.textContent = "⏳ Generating Stim circuit...";
-        stimSection.style.display = 'block';
-        downloadBtn.style.display = 'none';
-
-        try {
-            const form = document.getElementById("stim-form");
-            const formData = new FormData(form);
-            const response = await fetch('/compile_circuit_from_working', {
-                method: 'POST',
-                body: formData
-            });
-
-            const data = await response.json();
-            if (response.ok) {
-                stimOutput.textContent = data.circuit;
-                downloadBtn.href = data.download_url;
-                downloadBtn.style.display = 'block';
-
-                // ✅ Immediately update Crumble iframe with the new circuit
-                const encodedCircuit = encodeURIComponent(data.circuit);
-                const crumbleIframe = document.getElementById("crumble-iframe");
-                if (crumbleIframe) {
-                    crumbleIframe.src = "https://algassert.com/crumble#circuit=" + encodedCircuit;
-                    document.getElementById("crumble-viewer-panel").style.display = "block";
-                }
-
-            } else {
-                stimOutput.textContent = data.error || "❌ Failed to compile Stim circuit.";
-                downloadBtn.style.display = 'none';
-            }
-        } catch (err) {
-            stimOutput.textContent = "❌ An unexpected error occurred.";
-            console.error(err);
-        }
-    });
-
     // Start from scratch
     document.getElementById("start-graph-form")?.addEventListener("submit", async (e) => {
         e.preventDefault();
@@ -598,5 +554,75 @@ document.getElementById("export-json-btn")?.addEventListener("click", async () =
         document.getElementById("export-json-status").textContent = "✅ JSON downloaded successfully.";
     } catch (err) {
         document.getElementById("export-json-status").textContent = "❌ Error: " + err.message;
+    }
+});
+
+document.getElementById("generate-stim-btn").addEventListener("click", async (e) => {
+    e.preventDefault();
+
+    // 💬 UI Feedback: show generating message
+    const stimOutput = document.getElementById("stim-output");
+    const stimSection = document.getElementById("stim-section");
+    const downloadBtn = document.getElementById("download-stim-btn");
+
+    stimOutput.textContent = "⏳ Generating Stim circuit...";
+    stimSection.style.display = 'block';
+    downloadBtn.style.display = 'none';
+
+    const data = new FormData();
+
+    // --- Surface index from "Surfaces" tab ---
+    const surfaceIndex = document.getElementById("surface-index")?.value;
+    if (!surfaceIndex) {
+        alert("⚠️ Please select a correlation surface.");
+        stimOutput.textContent = "";
+        return;
+    }
+    data.append("surface_index", surfaceIndex);
+
+    // --- Stim parameters ---
+    data.append("compile_convention", document.getElementById("compile_convention")?.value);
+    data.append("k", document.getElementById("k")?.value);
+    data.append("noise_p", document.getElementById("noise_p")?.value);
+    data.append("manhattan_radius", document.getElementById("manhattan_radius")?.value);
+
+    // --- Detector DB tab ---
+    const dbPath = document.getElementById("database_path")?.value;
+    const doNotUseDB = document.getElementById("do_not_use_database")?.checked;
+    const onlyUseDB = document.getElementById("only_use_database")?.checked;
+
+    if (dbPath) data.append("database_path", dbPath);
+    if (doNotUseDB) data.append("do_not_use_database", "true");
+    if (onlyUseDB) data.append("only_use_database", "true");
+
+    try {
+        const response = await fetch("/compile_circuit_from_working", {
+            method: "POST",
+            body: data,
+        });
+
+        const result = await response.json();
+
+        if (response.ok) {
+            stimOutput.textContent = result.circuit;
+
+            // Show download button
+            downloadBtn.href = result.download_url;
+            downloadBtn.style.display = "block";
+
+            // Load Crumble
+            const encodedCircuit = encodeURIComponent(result.circuit);
+            const crumbleIframe = document.getElementById("crumble-iframe");
+            if (crumbleIframe) {
+                crumbleIframe.src = `https://algassert.com/crumble#circuit=${encodedCircuit}`;
+                document.getElementById("crumble-viewer-panel").style.display = "block";
+            }
+
+        } else {
+            stimOutput.textContent = result.error || "❌ Compilation failed.";
+        }
+    } catch (err) {
+        stimOutput.textContent = "❌ An unexpected error occurred.";
+        console.error(err);
     }
 });

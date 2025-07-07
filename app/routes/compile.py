@@ -53,9 +53,27 @@ def compile_routes(app):
     @app.route("/compile_circuit_from_working", methods=["POST"])
     def compile_circuit_from_working():
         try:
+            print("Received form data:", request.form)
+            # Read strictly from the form
+            compile_convention = request.form["compile_convention"]
+            selected_surface_index = int(request.form["surface_index"])
+            k = int(request.form["k"])
+            noise_p = float(request.form["noise_p"])
+            manhattan_radius = int(request.form["manhattan_radius"])
 
-            circuit = compile_from_working_dae()
+            print("Data:", compile_convention, selected_surface_index, k,
+                  noise_p, manhattan_radius)
 
+            # Pass everything explicitly to the helper
+            circuit = compile_from_working_dae(
+                selected_surface_index=selected_surface_index,
+                compile_convention=compile_convention,
+                k=k,
+                noise_p=noise_p,
+                manhattan_radius=manhattan_radius,
+            )
+
+            # Save file and return response
             folder = os.path.join(current_app.root_path, "stim_files")
             os.makedirs(folder, exist_ok=True)
             filename = "stim_circuit.txt"
@@ -73,7 +91,7 @@ def compile_routes(app):
 
         except Exception as e:
             return jsonify({"error": f"❌ {str(e)}"}), 400
-
+        
     @app.route("/get_stim_circuit", methods=["GET"])
     def get_stim_circuit():
         try:
@@ -98,7 +116,6 @@ def compile_routes(app):
             "Stim circuit generated successfully! You can now download it.", "success"
         )
         return send_from_directory(stim_folder, filename, as_attachment=True)
-
 
 def render_pop_faces_viewer(app):
     @app.route("/pop_faces", methods=["POST"])
